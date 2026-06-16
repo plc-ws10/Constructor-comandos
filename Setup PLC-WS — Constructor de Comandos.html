@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)https://www.ityt.com.ar/Apps/WebSat/SetupPLCWS.html -->
+<html lang="es" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setup PLC-WS — Constructor de Comandos</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  [data-theme="light"] {
+    --bg: #f5f5f3; --surface: #ffffff; --surface2: #f0efec;
+    --border: rgba(0,0,0,0.12); --border-med: rgba(0,0,0,0.22);
+    --text: #1a1a18; --text2: #5a5a56; --text3: #9a9a94;
+    --accent: #534AB7; --accent-bg: #EEEDFE; --accent-text: #3C3489;
+    --green: #0F6E56; --green-bg: #E1F5EE;
+    --blue: #185FA5; --blue-bg: #E6F1FB;
+    --amber: #BA7517; --amber-bg: #FAEEDA;
+    --danger: #A32D2D; --danger-bg: #FCEBEB;
+  }
+
+  [data-theme="dark"] {
+    --bg: #1a1a18; --surface: #242422; --surface2: #2c2c2a;
+    --border: rgba(255,255,255,0.10); --border-med: rgba(255,255,255,0.20);
+    --text: #f0efec; --text2: #a0a09a; --text3: #606058;
+    --accent: #7F77DD; --accent-bg: #26215C; --accent-text: #AFA9EC;
+    --green: #5DCAA5; --green-bg: #04342C;
+    --blue: #85B7EB; --blue-bg: #042C53;
+    --amber: #EF9F27; --amber-bg: #412402;
+    --danger: #F09595; --danger-bg: #501313;
+  }
+
+  :root {
+    --radius: 8px; --radius-lg: 12px;
+    --mono: 'Courier New', Courier, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.5; transition: background .2s, color .2s; }
+
+  header { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 0 1.25rem; display: flex; align-items: center; gap: 1rem; height: 68px; position: sticky; top: 0; z-index: 100; }
+  header .logo { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: -.01em; flex: 1; }
+  header .logo span { color: var(--text2); font-weight: 400; }
+  header .version { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--accent-bg); color: var(--accent-text); font-weight: 500; }
+
+  .theme-btn { width: 36px; height: 36px; border-radius: var(--radius); border: 0.5px solid var(--border-med); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: background .15s, border-color .15s; flex-shrink: 0; }
+  .theme-btn:hover { background: var(--accent-bg); border-color: var(--accent); }
+
+  .container { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 1.5rem; overflow: hidden; }
+  .card-header { padding: .875rem 1.25rem; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: .75rem; }
+  .card-icon { width: 32px; height: 32px; border-radius: var(--radius); background: var(--accent-bg); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-subtitle { font-size: 12px; color: var(--text3); margin-top: 1px; }
+  .card-body { padding: 1.25rem; }
+
+  .field-row { display: grid; grid-template-columns: 210px 1fr; gap: 12px; align-items: start; margin-bottom: .4rem; }
+  .field-label { font-size: 13px; color: var(--text2); padding-top: 7px; }
+  .field-hint { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+  /* 2-col alarm grid */
+  .alarm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+
+  input[type="text"], input[type="number"], select { width: 100%; height: 36px; border: 0.5px solid var(--border-med); border-radius: var(--radius); padding: 0 10px; font-size: 14px; background: var(--surface); color: var(--text); font-family: var(--sans); outline: none; transition: border-color .15s, box-shadow .15s; }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(83,74,183,.15); }
+  input::placeholder { color: var(--text3); }
+
+  .section-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .75rem; }
+  .divider { height: 0.5px; background: var(--border); margin: 1.25rem 0; }
+
+  .preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
+  .preset-btn { font-size: 12px; padding: 4px 12px; cursor: pointer; border: 0.5px solid var(--border-med); border-radius: 999px; background: transparent; color: var(--text2); font-family: var(--sans); transition: all .15s; }
+  .preset-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent-text); }
+
+  .output-box { background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-top: 1.25rem; }
+  .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .625rem; }
+  .output-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); }
+  .copy-btn { font-size: 12px; padding: 4px 12px; cursor: pointer; border: 0.5px solid var(--border-med); border-radius: var(--radius); background: var(--surface); color: var(--text2); font-family: var(--sans); display: flex; align-items: center; gap: 5px; transition: all .15s; }
+  .copy-btn:hover { background: var(--surface2); color: var(--text); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+  .cmd-output { font-family: var(--mono); font-size: 14px; color: var(--accent); word-break: break-all; line-height: 1.7; white-space: pre-wrap; }
+  .cmd-output.empty { color: var(--text3); font-family: var(--sans); font-size: 13px; }
+
+  .verify-note { font-size: 12px; color: var(--text3); margin-top: .5rem; }
+  .verify-note code { font-family: var(--mono); color: var(--accent); font-size: 12px; }
+
+  .field-error { font-size: 12px; color: var(--danger); background: var(--danger-bg); border-radius: var(--radius); padding: 6px 10px; margin-top: .5rem; display: none; }
+
+  .ai-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin-bottom: 1.25rem; }
+  .ai-chip { padding: 7px 4px; border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 11px; font-weight: 500; text-align: center; background: var(--surface); color: var(--text2); transition: all .15s; }
+  .ai-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .ai-chip.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent-text); }
+
+  .ip-entry { display: grid; grid-template-columns: 140px 1fr 100px; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .ip-badge { font-size: 11px; font-weight: 500; padding: 5px 8px; border-radius: var(--radius); text-align: center; white-space: nowrap; }
+
+  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; vertical-align: middle; margin-left: 4px; }
+  .badge-accent { background: var(--accent-bg); color: var(--accent-text); }
+  .badge-blue   { background: var(--blue-bg);   color: var(--blue); }
+
+  /* alarm section sub-label */
+  .alarm-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin: .5rem 0 .35rem; display: flex; align-items: center; gap: 6px; }
+  .alarm-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .ai-chip.confirmed { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+  .confirm-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 7px 16px; cursor: pointer; border: 0.5px solid var(--border-med); border-radius: var(--radius); background: transparent; color: var(--text2); font-family: var(--sans); transition: all .15s; margin-top: .75rem; }
+  .confirm-btn:hover { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+  .confirm-btn.ok { background: var(--green-bg); border-color: var(--green); color: var(--green); font-weight: 600; }
+  .reset-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 7px 16px; cursor: pointer; border: 0.5px solid var(--border-med); border-radius: var(--radius); background: transparent; color: var(--text2); font-family: var(--sans); transition: all .15s; margin-top: .75rem; margin-left: .5rem; }
+  .reset-btn:hover { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+  input.num-field { -moz-appearance: textfield; }
+  input.num-field::-webkit-outer-spin-button, input.num-field::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* ALL-AI summary block */
+  .all-ai-box { background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-top: 1.5rem; }
+  .all-ai-line { display: grid; grid-template-columns: 60px 1fr; gap: 8px; align-items: baseline; margin-bottom: 4px; font-family: var(--mono); font-size: 13px; }
+  .all-ai-ch { font-size: 11px; font-weight: 600; color: var(--text3); padding-top: 1px; }
+  .all-ai-cmd { color: var(--accent); word-break: break-all; line-height: 1.5; }
+  .all-ai-cmd.err { color: var(--danger); font-family: var(--sans); font-size: 12px; }
+
+  .collapse-trigger { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; padding: .875rem 1.25rem; border-bottom: 0.5px solid var(--border); transition: background .15s; }
+  .collapse-trigger:hover { background: var(--surface2); }
+  .collapse-arrow { font-size: 14px; color: var(--text3); transition: transform .2s; }
+  .collapse-arrow.open { transform: rotate(90deg); }
+  .collapse-body { display: none; padding: 1.25rem; }
+  .collapse-body.open { display: block; }
+
+  footer { text-align: center; font-size: 12px; color: var(--text3); padding: 2rem 1.5rem; border-top: 0.5px solid var(--border); margin-top: 1rem; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .field-row  { grid-template-columns: 1fr; gap: 4px; }
+    .alarm-grid { grid-template-columns: 1fr; }
+    .ip-entry   { grid-template-columns: 1fr; }
+    .ai-grid    { grid-template-columns: repeat(5, 1fr); }
+    header, .container, .card-body { padding-left: 1rem; padding-right: 1rem; }
+    .all-ai-line { grid-template-columns: 50px 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 60" width="200" height="56" style="display:block;flex-shrink:0">
+  <defs>
+    <lineargradient id="lgrd" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1"></stop>
+      <stop offset="55%" style="stop-color:#1565C0;stop-opacity:1"></stop>
+      <stop offset="100%" style="stop-color:#0D47A1;stop-opacity:1"></stop>
+    </lineargradient>
+  </defs>
+  <rect width="180" height="60" rx="8" fill="url(#lgrd)"></rect>
+  <path d="M 82 4 Q 145 -10 179 18 Q 156 6 112 17 Q 91 22 81 31 Q 97 9 82 4 Z" fill="white" opacity="0.22"></path>
+  <path d="M 97 1 Q 152 -6 179 13 Q 159 3 119 13 Q 101 17 93 25 Q 102 6 97 1 Z" fill="white" opacity="0.38"></path>
+  <text x="50%" y="41" text-anchor="middle" font-family="Georgia,&#39;Times New Roman&#39;,serif" font-size="27" font-style="italic" font-weight="400" fill="white" letter-spacing="1">Linde</text>
+</svg>
+  <div class="logo" style="padding-left:.25rem">PLC-WS <span>Constructor de Comandos</span></div>
+  <span class="version">FW v8.3+</span>
+  <span class="version" style="background:var(--green-bg);color:var(--green)">App v1.31</span>
+  <button class="theme-btn" onclick="saveConfig()" title="Guardar configuración en archivo JSON" style="width:auto;padding:0 10px;font-size:12px;gap:4px;display:flex;align-items:center">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+    Guardar
+  </button>
+  <label class="theme-btn" title="Cargar configuración desde archivo JSON" style="width:auto;padding:0 10px;font-size:12px;gap:4px;display:flex;align-items:center;cursor:pointer">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+    Cargar
+    <input type="file" id="load-file" accept=".json" style="display:none" onchange="loadConfig(event)">
+  </label>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Cambiar tema claro / oscuro">
+    <span id="theme-icon">🌙</span>
+  </button>
+</header>
+
+<div class="container">
+
+  <!-- ═══ RED ═══ -->
+  <div class="card">
+    <div class="collapse-trigger" onclick="toggleCollapse(this)">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <div class="card-icon" style="margin:0">🌐</div>
+        <div>
+          <div class="card-title">Configuración de red</div>
+          <div class="card-subtitle">APN, servidores IP de destino y URL FOTA</div>
+        </div>
+      </div>
+      <span class="collapse-arrow open">▶</span>
+    </div>
+    <div class="collapse-body open">
+
+      <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:.875rem">
+        <div class="collapse-trigger" onclick="toggleCollapse(this)" style="padding:.75rem 1rem">
+          <div style="display:flex;align-items:center;gap:.625rem">
+            <span style="font-size:18px">📶</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Configuración de APN</div>
+              <div style="font-size:11px;color:var(--text3)">Comando SCXAPN — datos móviles GPRS/LTE</div>
+            </div>
+          </div>
+          <span class="collapse-arrow">▶</span>
+        </div>
+        <div class="collapse-body" style="padding:1rem 1.25rem">
+<div class="section-label">Presets por operador</div>
+      <div class="preset-row">
+        <button class="preset-btn" onclick="apnPreset(&#39;internet.ctimovil.com.ar&#39;,&#39;&#39;,&#39;&#39;)">Claro AR</button>
+        <button class="preset-btn" onclick="apnPreset(&#39;internet.gprs.unifon.com.ar&#39;,&#39;wap&#39;,&#39;wap&#39;)">Movistar AR</button>
+        <button class="preset-btn" onclick="apnPreset(&#39;gprs.personal.com&#39;,&#39;&#39;,&#39;&#39;)">Personal AR</button>
+        <button class="preset-btn" onclick="apnPreset(&#39;m2mdataglobal.claro.com.ar&#39;,&#39;&#39;,&#39;&#39;)">Claro Dataglobal</button>
+        <button class="preset-btn" onclick="apnPreset(&#39;igprs.claro.com.ar&#39;,&#39;&#39;,&#39;&#39;)">Claro AR2</button>
+      </div>
+<div class="field-row">
+        <div><div class="field-label">APN (host)</div></div>
+        <input type="text" id="apn-host" placeholder="internet.ctimovil.com.ar" oninput="buildApn()">
+      </div>
+      <div class="field-row">
+        <div><div class="field-label">Usuario</div><div class="field-hint">vacío si no aplica</div></div>
+        <input type="text" id="apn-user" placeholder="" oninput="buildApn()">
+      </div>
+      <div class="field-row">
+        <div><div class="field-label">Contraseña</div><div class="field-hint">vacío si no aplica</div></div>
+        <input type="text" id="apn-pass" placeholder="" oninput="buildApn()">
+      </div>
+      <div id="apn-err" class="field-error" style="display: none;">El APN no puede estar vacío.</div>
+      <div class="output-box">
+        <div class="output-header">
+          <span class="output-label">Comando generado</span>
+          <button class="copy-btn" id="copy-apn" onclick="copyText(&#39;apn-out&#39;,&#39;copy-apn&#39;)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="cmd-output" id="apn-out">&gt;SCXAPNinternet.gprs.unifon.com.ar,wap,wap&lt;</div>
+      </div>
+
+        </div>
+      </div>
+      <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:.875rem">
+        <div class="collapse-trigger" onclick="toggleCollapse(this)" style="padding:.75rem 1rem">
+          <div style="display:flex;align-items:center;gap:.625rem">
+            <span style="font-size:18px">🌐</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Servidores IP de destino</div>
+              <div style="font-size:11px;color:var(--text3)">Comandos SIP0, SIP1, SIP2 — principal, técnico y repositorio FOTA</div>
+            </div>
+          </div>
+          <span class="collapse-arrow">▶</span>
+        </div>
+        <div class="collapse-body" style="padding:1rem 1.25rem">
+<div class="ip-entry">
+        <span class="ip-badge" style="background:var(--accent-bg);color:var(--accent-text)">IP0 — Servidor Principal</span>
+        <input type="text" id="ip0h" value="g13.service24gps.com" oninput="buildIp()">
+        <input type="number" id="ip0p" min="1" max="65535" value="13020" oninput="buildIp()">
+      </div>
+      <div class="ip-entry">
+        <span class="ip-badge" style="background:var(--blue-bg);color:var(--blue)">IP1 — Servicio Técnico</span>
+        <input type="text" id="ip1h" value="dm.rinho.com.ar" oninput="buildIp()">
+        <input type="number" id="ip1p" min="1" max="65535" value="4031" oninput="buildIp()">
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="ip-entry">
+        <span class="ip-badge" style="background:var(--amber-bg);color:var(--amber)">IP2 — Repositorio FOTA</span>
+        <input type="text" id="ip2-url" value="http://ityt.com.ar/equipos/repo/plc-ws/plcws_app.bin" oninput="buildIp()" placeholder="URL firmware OTA" style="grid-column:2/4">
+      </div>
+
+      <div id="ip-err" class="field-error" style="display: none;">IP0 debe tener host y puerto válidos (1–65535).</div>
+      <div class="output-box">
+        <div class="output-header">
+          <span class="output-label">Comandos generados</span>
+          <button class="copy-btn" id="copy-ip" onclick="copyText(&#39;ip-out&#39;,&#39;copy-ip&#39;)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copiar todos
+          </button>
+        </div>
+        <div class="cmd-output" id="ip-out">&gt;SIP0"g13.service24gps.com",13020&lt;
+&gt;SIP1"dm.rinho.com.ar",4031&lt;
+&gt;SIP2"http://ityt.com.ar/equipos/repo/plc-ws/plcws_app.bin"&lt;</div>
+      </div>
+        </div>
+      </div>
+      <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+        <div class="collapse-trigger" onclick="toggleCollapse(this)" style="padding:.75rem 1rem">
+          <div style="display:flex;align-items:center;gap:.625rem">
+            <span style="font-size:18px">📡</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Redes WiFi — SAPW</div>
+              <div style="font-size:11px;color:var(--text3)">Hasta 5 redes configurables (00–04) · IP estática u opcional DHCP</div>
+            </div>
+          </div>
+          <span class="collapse-arrow">▶</span>
+        </div>
+        <div class="collapse-body" style="padding:1rem 1.25rem">
+
+          <!-- Network chips -->
+          <div class="section-label" style="margin-bottom:.5rem">Seleccionar red</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:1rem" id="apw-chips"><div class="ai-chip active" id="apw-chip-0">AP00</div><div class="ai-chip" id="apw-chip-1">AP01</div><div class="ai-chip" id="apw-chip-2">AP02</div><div class="ai-chip" id="apw-chip-3">AP03</div><div class="ai-chip" id="apw-chip-4">AP04</div></div>
+
+          <!-- Per-network fields -->
+          <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem">
+            <div class="field-row">
+              <div><div class="field-label">SSID</div><div class="field-hint">nombre de la red WiFi</div></div>
+              <input type="text" id="apw-ssid" placeholder="MiRedWiFi" autocomplete="off" oninput="saveAPW();buildAPW()">
+            </div>
+            <div class="field-row">
+              <div><div class="field-label">Contraseña</div></div>
+              <input type="text" id="apw-pass" placeholder="contraseña" autocomplete="off" oninput="saveAPW();buildAPW()">
+            </div>
+
+            <div class="alarm-label"><span class="alarm-dot" style="background:var(--text3)"></span>IP estática <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(opcional — vacío = DHCP)</span></div>
+
+            <div class="alarm-grid">
+              <div class="field-row">
+                <div><div class="field-label">IP fija</div><div class="field-hint">p.ej. 192.168.1.50</div></div>
+                <input type="text" id="apw-ip" placeholder="vacío = DHCP" autocomplete="off" oninput="saveAPW();buildAPW()">
+              </div>
+              <div class="field-row">
+                <div><div class="field-label">Máscara</div><div class="field-hint">p.ej. 255.255.255.0</div></div>
+                <input type="text" id="apw-mask" placeholder="vacío = DHCP" autocomplete="off" oninput="saveAPW();buildAPW()">
+              </div>
+              <div class="field-row">
+                <div><div class="field-label">Gateway</div><div class="field-hint">p.ej. 192.168.1.1</div></div>
+                <input type="text" id="apw-gw" placeholder="vacío = DHCP" autocomplete="off" oninput="saveAPW();buildAPW()">
+              </div>
+            </div>
+
+            <div id="apw-err" class="field-error" style="display: none;"></div>
+
+            <div style="display:flex;align-items:center;flex-wrap:wrap">
+              <button class="confirm-btn" id="apw-confirm-btn" onclick="confirmAPW()" style="margin-top:.75rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Confirmar red</button>
+              <button class="reset-btn" onclick="resetAPW()" style="margin-top:.75rem">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-3.5"></path></svg> Valores por defecto
+              </button>
+            </div>
+
+            <div class="output-box">
+              <div class="output-header">
+                <span class="output-label" id="apw-cmd-label">Comando SAPW00</span>
+                <button class="copy-btn" id="copy-apw" onclick="copyText(&#39;apw-out&#39;,&#39;copy-apw&#39;)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Copiar
+                </button>
+              </div>
+              <div class="cmd-output" id="apw-out">&gt;SAPW00websat,12345678,,,&lt;</div>
+            </div>
+          </div>
+
+          <!-- Summary all 5 -->
+          <div class="all-ai-box" style="margin-top:1rem">
+            <div class="output-header">
+              <span class="output-label">Configuración de las 5 redes</span>
+              <button class="copy-btn" id="copy-apw-all" onclick="copyAllAPW()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copiar todos
+              </button>
+            </div>
+            <div id="apw-all-lines"><div class="all-ai-line" style="cursor: pointer;"><div class="all-ai-ch">AP00<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAPW00websat,12345678,,,&lt;</div></div><div class="all-ai-line" style="cursor: pointer;"><div class="all-ai-ch">AP01<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAPW01INVITADOS,1234567890,,,&lt;</div></div><div class="all-ai-line" style="cursor: pointer;"><div class="all-ai-ch">AP02<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div style="font-size: 12px; color: var(--text3); font-family: var(--sans);">— vacía</div></div><div class="all-ai-line" style="cursor: pointer;"><div class="all-ai-ch">AP03<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div style="font-size: 12px; color: var(--text3); font-family: var(--sans);">— vacía</div></div><div class="all-ai-line" style="cursor: pointer;"><div class="all-ai-ch">AP04<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div style="font-size: 12px; color: var(--text3); font-family: var(--sans);">— vacía</div></div></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ AI ═══ -->
+  <div class="card">
+    <div class="collapse-trigger" onclick="toggleCollapse(this)">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <div class="card-icon" style="margin:0">〰️</div>
+        <div>
+          <div class="card-title">Entradas analógicas — SAI</div>
+          <div class="card-subtitle">Configuración de canales AI01 a AI10 (4–20 mA / 0–10 V)</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▶</span>
+    </div>
+    <div class="collapse-body">
+      <div class="section-label">Seleccionar canal</div>
+      <div class="ai-grid" id="ai-chips"><div class="ai-chip active" id="chip-1" title="Temperatura bomba">AI01</div><div class="ai-chip" id="chip-2" title="Presion fase gas">AI02</div><div class="ai-chip" id="chip-3" title="Presion fase liquida">AI03</div><div class="ai-chip" id="chip-4" title="Presion bomba">AI04</div><div class="ai-chip" id="chip-5" title="Vacio">AI05</div><div class="ai-chip" id="chip-6" title="Consumo 0-10 V">AI06</div><div class="ai-chip" id="chip-7" title="Free 4-20mA">AI07</div><div class="ai-chip" id="chip-8" title="Free 4-20mA">AI08</div><div class="ai-chip" id="chip-9" title="Test 4-20mA">AI09</div><div class="ai-chip" id="chip-10" title="Test 0-10V">AI10</div></div>
+      <div id="ai-form-wrapper"><div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:0"><div class="section-label" style="margin-bottom:.625rem">Canal AI01 — Temperatura bomba</div><div class="field-row"><div><div class="field-label">Tipo de señal</div></div><select id="ai-t" onchange="saveAiVal();buildAi()"><option value="A" selected="">A — corriente 4–20 mA</option><option value="V">V — tensión 0–10 V</option></select></div><div class="alarm-label"><span class="alarm-dot" style="background:var(--accent)"></span>Unidad de ingeniería</div><div class="alarm-grid"><div class="field-row"><div><div class="field-label">Mínimo</div><div class="field-hint">con punto decimal</div></div><input type="text" inputmode="decimal" class="num-field" id="ai-min" value="-250" autocomplete="off" oninput="sanitizeNum(this);saveAiVal();buildAi()"></div><div class="field-row"><div><div class="field-label">Máximo</div><div class="field-hint">mayor que mínimo</div></div><input type="text" inputmode="decimal" class="num-field" id="ai-max" value="25" autocomplete="off" oninput="sanitizeNum(this);saveAiVal();buildAi()"></div><div class="field-row"><div><div class="field-label">Descripción</div><div class="field-hint">máx. 20 caracteres</div></div><input type="text" id="ai-desc" maxlength="20" value="Temperatura bomba" oninput="saveAiVal();buildAi()"></div><div class="field-row"><div><div class="field-label">Unidad (UUU)</div><div class="field-hint">exactamente 3 chars</div></div><input type="text" id="ai-unit" maxlength="4" value="C" oninput="saveAiVal();buildAi()" style="font-family:var(--mono)"></div></div><div class="alarm-label"><span class="alarm-dot" style="background:var(--danger)"></span>Alarmas de nivel <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(vacío = deshabilitada)</span></div><div class="alarm-grid"><div class="field-row"><div><div class="field-label">HH — Alto-Alto</div><div class="field-hint">umbral crítico superior</div></div><input type="text" inputmode="decimal" class="num-field" id="ai-hh" value="" autocomplete="off" oninput="sanitizeNum(this);saveAiVal();buildAi()"></div><div class="field-row"><div><div class="field-label">H — Alto</div><div class="field-hint">umbral alto</div></div><input type="text" inputmode="decimal" class="num-field" id="ai-h" value="" autocomplete="off" oninput="sanitizeNum(this);saveAiVal();buildAi()"></div><div class="field-row"><div><div class="field-label">L — Bajo</div><div class="field-hint">umbral bajo</div></div><input type="text" inputmode="decimal" class="num-field" id="ai-l" value="" autocomplete="off" oninput="sanitizeNum(this);saveAiVal();buildAi()"></div><div class="field-row"><div><div class="field-label">LL — Bajo-Bajo</div><div class="field-hint">umbral crítico inferior</div></div><input type="text" inputmode="decimal" class="num-field" id="ai-ll" value="" autocomplete="off" oninput="sanitizeNum(this);saveAiVal();buildAi()"></div></div><div class="alarm-label"><span class="alarm-dot" style="background:var(--amber)"></span>Alarma diferencial <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(0 = deshabilitada)</span></div><div class="alarm-grid"><div class="field-row"><div><div class="field-label">DIF — Diferencial</div><div class="field-hint">variación mínima para disparar</div></div><input type="text" inputmode="decimal" class="num-field" id="ai-dif" value="" autocomplete="off" oninput="sanitizeNum(this);saveAiVal();buildAi()"></div><div class="field-row"><div><div class="field-label">TT — Ventana (s)</div><div class="field-hint">segundos de observación</div></div><input type="text" inputmode="decimal" class="num-field" id="ai-tt" value="" autocomplete="off" oninput="sanitizeNum(this);saveAiVal();buildAi()"></div></div><div id="ai-err" class="field-error" style="display: none;"></div><div style="display:flex;align-items:center;flex-wrap:wrap"><button class="confirm-btn" id="confirm-btn" onclick="confirmAiCh(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Confirmar canal</button><button class="reset-btn" onclick="resetAiCh(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-3.5"></path></svg> Valores por defecto</button></div><div class="output-box"><div class="output-header"><span class="output-label">Comando SAI01</span><button class="copy-btn" id="copy-ai" onclick="copyText(&#39;ai-out&#39;,&#39;copy-ai&#39;)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copiar</button></div><div class="cmd-output" id="ai-out">&gt;SAI01,A,-250,25,Temperatura bomba,C  ,,,,,,&lt;</div></div></div></div>
+
+      <!-- ALL 10 AI SUMMARY -->
+      <div class="all-ai-box">
+        <div class="output-header">
+          <span class="output-label">Todos los canales — configuración completa</span>
+          <button class="copy-btn" id="copy-all-ai" onclick="copyAllAi()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copiar todos
+          </button>
+        </div>
+        <div id="all-ai-lines"><div class="all-ai-line"><div class="all-ai-ch">AI01<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI01,A,-250,25,Temperatura bomba,C  ,,,,,,&lt;</div></div><div class="all-ai-line"><div class="all-ai-ch">AI02<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI02,A,0,6000,Presion fase gas,mba,,,,,,&lt;</div></div><div class="all-ai-line"><div class="all-ai-ch">AI03<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI03,A,0,6000,Presion fase liquida,mba,,,,,,&lt;</div></div><div class="all-ai-line"><div class="all-ai-ch">AI04<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI04,A,0,40,Presion bomba,bar,,,,,,&lt;</div></div><div class="all-ai-line"><div class="all-ai-ch">AI05<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI05,A,0,1000,Vacio,um ,,,,,,&lt;</div></div><div class="all-ai-line"><div class="all-ai-ch">AI06<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI06,V,0,50,Consumo 0-10 V,A  ,,,,,,&lt;</div></div><div class="all-ai-line"><div class="all-ai-ch">AI07<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI07,A,4,20,Free 4-20mA,mA ,,,,,,&lt;</div></div><div class="all-ai-line"><div class="all-ai-ch">AI08<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI08,A,4,20,Free 4-20mA,mA ,,,,,,&lt;</div></div><div class="all-ai-line"><div class="all-ai-ch">AI09<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI09,A,4,20,Test 4-20mA,mA ,,,,,,&lt;</div></div><div class="all-ai-line"><div class="all-ai-ch">AI10<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:var(--border-med)"></span></div><div class="all-ai-cmd" style="color: var(--text3);">&gt;SAI10,V,0,10,Test 0-10V,V  ,,,,,,&lt;</div></div></div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- ═══ LINEALIZACIÓN Y SCRIPT ═══ -->
+  <div class="card">
+    <div class="collapse-trigger" onclick="toggleCollapse(this)">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <div class="card-icon" style="margin:0">🛢️</div>
+        <div>
+          <div class="card-title">Linealización de cisterna y control de script</div>
+          <div class="card-subtitle">SCL — tres tramos lineales · SSCR — arranque y parada del script asociado</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▶</span>
+    </div>
+    <div class="collapse-body">
+      <div class="alarm-label"><span class="alarm-dot" style="background:var(--accent)"></span>Linealización — SCL</div>
+
+
+      <div style="font-size:12px;color:var(--text3);margin-bottom:1.25rem;line-height:1.6">
+        Modelo: <code style="font-family:var(--mono);font-size:12px;color:var(--accent)">y = mₙ·x + bₙ</code> &nbsp;·&nbsp;
+        Tramo 1: <code style="font-family:var(--mono);font-size:12px">0 → n1</code> &nbsp;·&nbsp;
+        Tramo 2: <code style="font-family:var(--mono);font-size:12px">n1 → n2</code> &nbsp;·&nbsp;
+        Tramo 3: <code style="font-family:var(--mono);font-size:12px">n2 → tope</code>
+      </div>
+
+      <!-- breakpoints -->
+      <div class="alarm-label"><span class="alarm-dot" style="background:var(--accent)"></span>Puntos de corte</div>
+      <div class="alarm-grid">
+        <div class="field-row">
+          <div><div class="field-label">n1 — fin tramo 1</div><div class="field-hint">valor del sensor en el primer corte</div></div>
+          <input type="text" inputmode="decimal" class="num-field" id="cl-n1" value="1800" autocomplete="off" oninput="sanitizeNum(this);buildCL()">
+        </div>
+        <div class="field-row">
+          <div><div class="field-label">n2 — fin tramo 2</div><div class="field-hint">n2 debe ser mayor que n1</div></div>
+          <input type="text" inputmode="decimal" class="num-field" id="cl-n2" value="7400" autocomplete="off" oninput="sanitizeNum(this);buildCL()">
+        </div>
+      </div>
+
+      <!-- tramo 1 -->
+      <div class="alarm-label"><span class="alarm-dot" style="background:#534AB7"></span>Tramo 1 &nbsp;<span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">0 → n1</span></div>
+      <div class="alarm-grid">
+        <div class="field-row">
+          <div><div class="field-label">m1 — pendiente</div></div>
+          <input type="text" inputmode="decimal" class="num-field" id="cl-m1" value="1242" autocomplete="off" oninput="sanitizeNum(this);buildCL()">
+        </div>
+        <div class="field-row">
+          <div><div class="field-label">b1 — ordenada al origen</div></div>
+          <input type="text" inputmode="decimal" class="num-field" id="cl-b1" value="270990" autocomplete="off" oninput="sanitizeNum(this);buildCL()">
+        </div>
+      </div>
+
+      <!-- tramo 2 -->
+      <div class="alarm-label"><span class="alarm-dot" style="background:var(--amber)"></span>Tramo 2 &nbsp;<span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">n1 → n2</span></div>
+      <div class="alarm-grid">
+        <div class="field-row">
+          <div><div class="field-label">m2 — pendiente</div></div>
+          <input type="text" inputmode="decimal" class="num-field" id="cl-m2" value="2032" autocomplete="off" oninput="sanitizeNum(this);buildCL()">
+        </div>
+        <div class="field-row">
+          <div><div class="field-label">b2 — ordenada al origen</div></div>
+          <input type="text" inputmode="decimal" class="num-field" id="cl-b2" value="1611400" autocomplete="off" oninput="sanitizeNum(this);buildCL()">
+        </div>
+      </div>
+
+      <!-- tramo 3 -->
+      <div class="alarm-label"><span class="alarm-dot" style="background:var(--green)"></span>Tramo 3 &nbsp;<span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">n2 → tope</span></div>
+      <div class="alarm-grid">
+        <div class="field-row">
+          <div><div class="field-label">m3 — pendiente</div></div>
+          <input type="text" inputmode="decimal" class="num-field" id="cl-m3" value="149" autocomplete="off" oninput="sanitizeNum(this);buildCL()">
+        </div>
+        <div class="field-row">
+          <div><div class="field-label">b3 — ordenada al origen</div></div>
+          <input type="text" inputmode="decimal" class="num-field" id="cl-b3" value="2235700" autocomplete="off" oninput="sanitizeNum(this);buildCL()">
+        </div>
+      </div>
+
+      <div id="cl-err" class="field-error" style="display: none;"></div>
+
+      <div class="output-box">
+        <div class="output-header">
+          <span class="output-label">Comando SCL</span>
+          <button class="copy-btn" id="copy-cl" onclick="copyText(&#39;cl-out&#39;,&#39;copy-cl&#39;)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="cmd-output" id="cl-out">&gt;SCL1800,7400,1242,270990,2032,1611400,149,2235700&lt;</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="alarm-label"><span class="alarm-dot" style="background:var(--green)"></span>Control de script — SSCR <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">— Script 1, más scripts disponibles con el mismo formato SSCRn:ON/OFF</span></div>
+
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">
+        <button class="confirm-btn" id="scr1-on-btn" onclick="setSCR(1,&#39;ON&#39;)" style="margin-top:0;background:var(--green-bg);border-color:var(--green);color:var(--green)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="10 8 16 12 10 16"></polyline></svg>
+          Arrancar script 1
+        </button>
+        <button class="confirm-btn" id="scr1-off-btn" onclick="setSCR(1,&#39;OFF&#39;)" style="margin-top:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><rect x="9" y="9" width="6" height="6"></rect></svg>
+          Parar script 1
+        </button>
+      </div>
+
+      <div class="output-box">
+        <div class="output-header">
+          <span class="output-label">Comando generado</span>
+          <button class="copy-btn" id="copy-scr1" onclick="copyText(&#39;scr1-out&#39;,&#39;copy-scr1&#39;)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="cmd-output empty" id="scr1-out">Seleccioná Arrancar o Parar para generar el comando</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ TIEMPOS Y TIMERS ═══ -->
+  <div class="card">
+    <div class="collapse-trigger" onclick="toggleCollapse(this)">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <div class="card-icon" style="margin:0">⏱️</div>
+        <div>
+          <div class="card-title">Tiempos de comunicación y timers</div>
+          <div class="card-subtitle">STD, SKA, STMR — intervalos de reporte y temporizadores</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▶</span>
+    </div>
+    <div class="collapse-body">
+
+      <!-- STD -->
+      <div class="alarm-label"><span class="alarm-dot" style="background:var(--accent)"></span>Intervalo de envío RCQ — IP0 principal</div>
+      <div class="field-row">
+        <div>
+          <div class="field-label">Intervalo STD (s)</div>
+          <div class="field-hint">rango 30 – 3600 s · default 180 s</div>
+        </div>
+        <input type="text" inputmode="decimal" class="num-field" id="std-val" value="180" autocomplete="off" oninput="sanitizeNum(this);buildSTD()">
+      </div>
+      <div id="std-err" class="field-error" style="display: none;"></div>
+      <div class="output-box">
+        <div class="output-header">
+          <span class="output-label">Comando STD</span>
+          <button class="copy-btn" id="copy-std" onclick="copyText(&#39;std-out&#39;,&#39;copy-std&#39;)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="cmd-output" id="std-out">&gt;STD180&lt;</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- SKA -->
+      <div class="alarm-label"><span class="alarm-dot" style="background:var(--blue)"></span>Keep-alive — IP1 backup</div>
+      <div class="field-row">
+        <div>
+          <div class="field-label">Intervalo SKA (s)</div>
+          <div class="field-hint">rango 15 – 3600 s · default 60 s</div>
+        </div>
+        <input type="text" inputmode="decimal" class="num-field" id="ska-val" value="60" autocomplete="off" oninput="sanitizeNum(this);buildSKA()">
+      </div>
+      <div id="ska-err" class="field-error" style="display: none;"></div>
+      <div class="output-box">
+        <div class="output-header">
+          <span class="output-label">Comando SKA</span>
+          <button class="copy-btn" id="copy-ska" onclick="copyText(&#39;ska-out&#39;,&#39;copy-ska&#39;)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="cmd-output" id="ska-out">&gt;SKA60&lt;</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- STMR -->
+      <div class="alarm-label"><span class="alarm-dot" style="background:var(--amber)"></span>Timers — solo Timer 1 y Timer 2 son configurables</div>
+      <div style="font-size:12px;color:var(--danger);background:var(--danger-bg);border-radius:var(--radius);padding:6px 10px;margin-bottom:.875rem">
+        ⚠ Timer 3 y Timer 4 son <strong>NO RESETEABLES</strong> — no pueden configurarse por comando.
+      </div>
+
+      <div class="alarm-grid">
+        <div>
+          <div class="field-row">
+            <div><div class="field-label">Timer 1 (min)</div><div class="field-hint">0 – 9 999 999 min</div></div>
+            <input type="text" inputmode="decimal" class="num-field" id="tmr1-val" value="" placeholder="vacío = no enviar" autocomplete="off" oninput="sanitizeNumPos(this);buildTMR()">
+          </div>
+          <div id="tmr1-out-wrap" style="display:none">
+            <div class="output-box" style="margin-top:.5rem">
+              <div class="output-header">
+                <span class="output-label">Comando STMR1</span>
+                <button class="copy-btn" id="copy-tmr1" onclick="copyText(&#39;tmr1-out&#39;,&#39;copy-tmr1&#39;)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Copiar
+                </button>
+              </div>
+              <div class="cmd-output" id="tmr1-out">—</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="field-row">
+            <div><div class="field-label">Timer 2 (min)</div><div class="field-hint">0 – 9 999 999 min</div></div>
+            <input type="text" inputmode="decimal" class="num-field" id="tmr2-val" value="" placeholder="vacío = no enviar" autocomplete="off" oninput="sanitizeNumPos(this);buildTMR()">
+          </div>
+          <div id="tmr2-out-wrap" style="display:none">
+            <div class="output-box" style="margin-top:.5rem">
+              <div class="output-header">
+                <span class="output-label">Comando STMR2</span>
+                <button class="copy-btn" id="copy-tmr2" onclick="copyText(&#39;tmr2-out&#39;,&#39;copy-tmr2&#39;)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Copiar
+                </button>
+              </div>
+              <div class="cmd-output" id="tmr2-out">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══ ACTUALIZACIÓN FIRMWARE ═══ -->
+  <div class="card">
+    <div class="collapse-trigger" onclick="toggleCollapse(this)">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <div class="card-icon" style="margin:0">🔄</div>
+        <div>
+          <div class="card-title">Procedimiento de actualización — FOTA</div>
+          <div class="card-subtitle">Instructivo v1.0 — por WiFi (FW v8.3+) o por Módem (FW v9.3+)</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▶</span>
+    </div>
+    <div class="collapse-body">
+
+      <!-- sub WiFi -->
+      <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1rem">
+        <div class="collapse-trigger" onclick="toggleCollapse(this)" style="padding:.75rem 1rem;border-bottom:0.5px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:.625rem">
+            <span style="font-size:18px">📶</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Actualización por WiFi</div>
+              <div style="font-size:11px;color:var(--text3)">Requiere red websat · FW v8.3+</div>
+            </div>
+          </div>
+          <span class="collapse-arrow">▶</span>
+        </div>
+        <div class="collapse-body" style="padding:1rem 1.25rem">
+      <div style="display:flex;flex-direction:column;gap:.625rem">
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-bg);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Consultar versión de firmware actual</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <code style="font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-bg);padding:3px 8px;border-radius:var(--radius)">&gt;QVR&lt;</code>
+              <button class="copy-btn" style="margin:0" onclick="navigator.clipboard.writeText(&#39;&gt;QVR&lt;&#39;);this.textContent=&#39;✓&#39;;setTimeout(()=&gt;this.textContent=&#39;Copiar&#39;,1500)">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-bg);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Habilitar conexión WiFi</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px">Crear hotspot desde celular o router con estos datos:</div>
+            <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:8px">
+              <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius);padding:8px 14px">
+                <div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">SSID</div>
+                <div style="font-family:var(--mono);font-size:15px;color:var(--text);font-weight:600">websat</div>
+              </div>
+              <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius);padding:8px 14px">
+                <div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Contraseña</div>
+                <div style="font-family:var(--mono);font-size:15px;color:var(--text);font-weight:600">12345678</div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-bg);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Enviar comando de actualización por WiFi</div><div style="font-size:12px;color:var(--text3);margin-top:4px">El equipo no responde SMS. Monitorear por consola UART0.</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <code style="font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-bg);padding:3px 8px;border-radius:var(--radius)">&gt;SFRMM1&lt;</code>
+              <button class="copy-btn" style="margin:0" onclick="navigator.clipboard.writeText(&#39;&gt;SFRMM1&lt;&#39;);this.textContent=&#39;✓&#39;;setTimeout(()=&gt;this.textContent=&#39;Copiar&#39;,1500)">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--amber-bg);color:var(--amber);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Esperar <strong>2 minutos</strong></div><div style="font-size:13px;color:var(--text2);margin-top:4px">Aguardar que el equipo descargue, flashee y reinicie.</div>
+            
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--danger-bg);color:var(--danger);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">5</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Enviar factory reset</div><div style="font-size:12px;color:var(--danger);margin-top:4px">⚠ Irreversible — borra toda la configuración y restaura valores de fábrica.</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <code style="font-family:var(--mono);font-size:13px;color:var(--danger);background:var(--danger-bg);padding:3px 8px;border-radius:var(--radius)">&gt;SFACTORY&lt;</code>
+              <button class="copy-btn" style="margin:0" onclick="navigator.clipboard.writeText(&#39;&gt;SFACTORY&lt;&#39;);this.textContent=&#39;✓&#39;;setTimeout(()=&gt;this.textContent=&#39;Copiar&#39;,1500)">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--green-bg);color:var(--green);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">6</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Verificar nueva versión de firmware</div><div style="font-size:12px;color:var(--green);margin-top:4px">✓ Confirmar que la versión cambió respecto al paso 1.</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <code style="font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-bg);padding:3px 8px;border-radius:var(--radius)">&gt;QVR&lt;</code>
+              <button class="copy-btn" style="margin:0" onclick="navigator.clipboard.writeText(&#39;&gt;QVR&lt;&#39;);this.textContent=&#39;✓&#39;;setTimeout(()=&gt;this.textContent=&#39;Copiar&#39;,1500)">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+        </div>
+      </div>
+
+      <!-- sub Modem -->
+      <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+        <div class="collapse-trigger" onclick="toggleCollapse(this)" style="padding:.75rem 1rem;border-bottom:0.5px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:.625rem">
+            <span style="font-size:18px">📡</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Actualización por Módem</div>
+              <div style="font-size:11px;color:var(--text3)">Sin WiFi, solo señal celular · FW v9.3+</div>
+            </div>
+          </div>
+          <span class="collapse-arrow">▶</span>
+        </div>
+        <div class="collapse-body" style="padding:1rem 1.25rem">
+      <div style="display:flex;flex-direction:column;gap:.625rem">
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-bg);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Consultar versión de firmware actual</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <code style="font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-bg);padding:3px 8px;border-radius:var(--radius)">&gt;QVR&lt;</code>
+              <button class="copy-btn" style="margin:0" onclick="navigator.clipboard.writeText(&#39;&gt;QVR&lt;&#39;);this.textContent=&#39;✓&#39;;setTimeout(()=&gt;this.textContent=&#39;Copiar&#39;,1500)">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-bg);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Verificar señal celular activa</div><div style="font-size:13px;color:var(--text2);margin-top:4px">No se requiere WiFi. El equipo descarga el firmware a través del módem celular.</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <code style="font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-bg);padding:3px 8px;border-radius:var(--radius)">&gt;QMDM&lt;</code>
+              <button class="copy-btn" style="margin:0" onclick="navigator.clipboard.writeText(&#39;&gt;QMDM&lt;&#39;);this.textContent=&#39;✓&#39;;setTimeout(()=&gt;this.textContent=&#39;Copiar&#39;,1500)">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-bg);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Enviar comando de actualización por módem</div><div style="font-size:12px;color:var(--text3);margin-top:4px">El equipo no responde SMS. Monitorear por consola UART0.</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <code style="font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-bg);padding:3px 8px;border-radius:var(--radius)">&gt;SFRMM2&lt;</code>
+              <button class="copy-btn" style="margin:0" onclick="navigator.clipboard.writeText(&#39;&gt;SFRMM2&lt;&#39;);this.textContent=&#39;✓&#39;;setTimeout(()=&gt;this.textContent=&#39;Copiar&#39;,1500)">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--amber-bg);color:var(--amber);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Esperar <strong>2 minutos</strong></div><div style="font-size:13px;color:var(--text2);margin-top:4px">Aguardar que el equipo descargue, flashee y reinicie.</div>
+            
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--danger-bg);color:var(--danger);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">5</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Enviar factory reset</div><div style="font-size:12px;color:var(--danger);margin-top:4px">⚠ Irreversible — borra toda la configuración y restaura valores de fábrica.</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <code style="font-family:var(--mono);font-size:13px;color:var(--danger);background:var(--danger-bg);padding:3px 8px;border-radius:var(--radius)">&gt;SFACTORY&lt;</code>
+              <button class="copy-btn" style="margin:0" onclick="navigator.clipboard.writeText(&#39;&gt;SFACTORY&lt;&#39;);this.textContent=&#39;✓&#39;;setTimeout(()=&gt;this.textContent=&#39;Copiar&#39;,1500)">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:0.5px;background:var(--border);margin:2px 0 2px 38px"></div>
+
+        <div style="display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--green-bg);color:var(--green);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">6</div>
+          <div style="padding-top:4px">
+            <div style="font-size:14px;color:var(--text)">Verificar nueva versión de firmware</div><div style="font-size:12px;color:var(--green);margin-top:4px">✓ Confirmar que la versión cambió respecto al paso 1.</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <code style="font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-bg);padding:3px 8px;border-radius:var(--radius)">&gt;QVR&lt;</code>
+              <button class="copy-btn" style="margin:0" onclick="navigator.clipboard.writeText(&#39;&gt;QVR&lt;&#39;);this.textContent=&#39;✓&#39;;setTimeout(()=&gt;this.textContent=&#39;Copiar&#39;,1500)">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ REFERENCIA ═══ -->
+  <div class="card">
+    <div class="collapse-trigger" onclick="toggleCollapse(this)">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <div class="card-icon" style="margin:0">📋</div>
+        <div>
+          <div class="card-title">Referencia rápida de comandos</div>
+          <div class="card-subtitle">Consulta, control y sistema</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▶</span>
+    </div>
+    <div class="collapse-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div>
+          <div class="section-label">Consultas — Q (responden con SMS)</div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <tbody><tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QGPS&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Posición GPS + mapa</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QIO&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Estado I/O completo (4 SMS)</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QNET&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Estado de red e IPs</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QMDM&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Info del módem</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QVR&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Versión firmware + OTA</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QAIxx&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Config canal analógico xx</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QCL&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Consulta linealización cisterna</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QTD&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Consulta intervalo RCQ</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QKA&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Consulta intervalo Keep-Alive</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QTMRx&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Consulta valor timer x</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QIP2&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Consulta URL firmware FOTA</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QAPWn&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Consulta red WiFi n → RAPWn...</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QSCRn&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Consulta estado script n</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QCQ&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Trama RCQ (UDP)</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;QHELP&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Ayuda de comandos</td></tr>
+          </tbody></table>
+        </div>
+        <div>
+          <div class="section-label">Seteos — S (sin respuesta SMS)</div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <tbody><tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SIPx"host",pto&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">IP destino x</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SIP2"url"&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">URL firmware FOTA</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SCXAPN...&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Configuración APN</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SAPWaa...&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Config red WiFi aa (SSID, pass, IP)</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SAIaa,...&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Config canal analógico aa</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SCLn1,n2,...&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Linealización cisterna</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;STDxxx&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Intervalo RCQ (30–3600 s)</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SKAxxx&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Keep-alive backup (15–3600 s)</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;STMRx:n&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Timer x = n min (solo T1 y T2)</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SSCRn:ON/OFF&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Arrancar / parar script n</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SRESET&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Reiniciar equipo</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SFRMM1&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Actualización OTA por WiFi (FW v8.3+)</td></tr>
+            <tr><td style="padding:5px 0;font-family:var(--mono);color:var(--accent)">&gt;SFRMM2&lt;</td><td style="padding:5px 0 5px 12px;color:var(--text2)">Actualización OTA por Módem (FW v9.3+)</td></tr>
+            <tr style="background:rgba(163,45,45,.06)"><td style="padding:5px 0;font-family:var(--mono);color:var(--danger)">&gt;SFACTORY&lt;</td><td style="padding:5px 0 5px 12px;color:var(--danger)">⚠ Factory reset — irreversible</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:1.25rem">Los comandos de Seteo (S...) no envían respuesta SMS. Verificar con el comando Q correspondiente luego de aplicar.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Setup PLC-WS — Generador de comandos &nbsp;·&nbsp; FW v8.3+ &nbsp;·&nbsp; App v1.31 &nbsp;·&nbsp;
+  <a href="http://web-sat.com.ar/" target="_blank" rel="noopener">WebSat</a>
+</footer>
+
+<script>
+// ── THEME ─────────────────────────────────────────────────────────────────
+var currentTheme = 'light';
+function toggleTheme() {
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  document.getElementById('theme-icon').textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+  try { localStorage.setItem('plcws-theme', currentTheme); } catch(e) {}
+}
+(function() {
+  var saved = null;
+  try { saved = localStorage.getItem('plcws-theme'); } catch(e) {}
+  if (saved === 'dark' || saved === 'light') { currentTheme = saved; }
+  else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { currentTheme = 'dark'; }
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  document.getElementById('theme-icon').textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+})();
+
+// ── AI DEFAULTS ───────────────────────────────────────────────────────────
+var aiDef = [
+  { ch:1,  t:'A', min:-250, max:25,   unit:'C  ', desc:'Temperatura bomba'    },
+  { ch:2,  t:'A', min:0,    max:6000, unit:'mbar', desc:'Presion fase gas'    },
+  { ch:3,  t:'A', min:0,    max:6000, unit:'mbar', desc:'Presion fase liquida'},
+  { ch:4,  t:'A', min:0,    max:40,   unit:'bar',  desc:'Presion bomba'       },
+  { ch:5,  t:'A', min:0,    max:1000, unit:'um ',  desc:'Vacio'               },
+  { ch:6,  t:'V', min:0,    max:50,   unit:'A  ',  desc:'Consumo 0-10 V'     },
+  { ch:7,  t:'A', min:4,    max:20,   unit:'mA ',  desc:'Free 4-20mA'        },
+  { ch:8,  t:'A', min:4,    max:20,   unit:'mA ',  desc:'Free 4-20mA'        },
+  { ch:9,  t:'A', min:4,    max:20,   unit:'mA ',  desc:'Test 4-20mA'        },
+  { ch:10, t:'V', min:0,    max:10,   unit:'V  ',  desc:'Test 0-10V'         }
+];
+
+// In-memory values per channel (all alarm fields default to 0)
+var aiVals = aiDef.map(function(d) {
+  return {
+    t: d.t, min: d.min, max: d.max,
+    desc: d.desc, unit: d.unit.trim(),
+    hh: '', h: '', l: '', ll: '', dif: '', tt: ''
+  };
+});
+
+var selAiCh = 1;
+
+var aiConfirmed = aiDef.map(function() { return false; });
+
+function sanitizeNum(el) {
+  var v = el.value, cleaned = '', hasDot = false;
+  for (var i = 0; i < v.length; i++) {
+    var c = v[i];
+    if (c === '-' && i === 0 && cleaned === '') cleaned += c;
+    else if (c === '.' && !hasDot) { cleaned += c; hasDot = true; }
+    else if (c >= '0' && c <= '9') cleaned += c;
+  }
+  if (el.value !== cleaned) {
+    var pos = Math.max(0, el.selectionStart - (v.length - cleaned.length));
+    el.value = cleaned;
+    try { el.setSelectionRange(pos, pos); } catch(e) {}
+  }
+}
+
+function confirmAiCh(ch) {
+  var err = document.getElementById('ai-err');
+  var out = document.getElementById('ai-out');
+  if (err && err.style.display !== 'none' && err.textContent.trim()) return;
+  if (!out || out.textContent === '—') return;
+  saveAiVal();
+  aiConfirmed[ch - 1] = true;
+  var chip = document.getElementById('chip-' + ch);
+  if (chip) chip.classList.add('confirmed');
+  var btn = document.getElementById('confirm-btn');
+  if (btn) { btn.classList.add('ok'); btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Canal confirmado'; }
+  renderAllAi();
+}
+
+function resetAiCh(ch) {
+  var d = aiDef[ch - 1];
+  aiVals[ch - 1] = { t: d.t, min: d.min, max: d.max, desc: d.desc, unit: d.unit.trim(), hh: '', h: '', l: '', ll: '', dif: '', tt: '' };
+  aiConfirmed[ch - 1] = false;
+  var chip = document.getElementById('chip-' + ch);
+  if (chip) chip.classList.remove('confirmed');
+  renderAiForm(ch);
+  renderAllAi();
+}
+
+// ── COPY ──────────────────────────────────────────────────────────────────
+function copyText(elId, btnId) {
+  var text = document.getElementById(elId).innerText || document.getElementById(elId).textContent;
+  if (!text || text === '—') return;
+  navigator.clipboard.writeText(text).then(function(){
+    var btn = document.getElementById(btnId);
+    var orig = btn.innerHTML;
+    btn.innerHTML = '✓ Copiado';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.innerHTML = orig; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+function copyAllAi() {
+  var lines = [];
+  for (var i = 0; i < 10; i++) {
+    var cmd = buildAiCmd(i + 1);
+    if (cmd) lines.push(cmd);
+  }
+  if (!lines.length) return;
+  navigator.clipboard.writeText(lines.join('\n')).then(function(){
+    var btn = document.getElementById('copy-all-ai');
+    var orig = btn.innerHTML;
+    btn.innerHTML = '✓ Copiado';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.innerHTML = orig; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+// ── APN ───────────────────────────────────────────────────────────────────
+function apnPreset(h, u, p) {
+  document.getElementById('apn-host').value = h;
+  document.getElementById('apn-user').value = u;
+  document.getElementById('apn-pass').value = p;
+  buildApn();
+}
+function buildApn() {
+  var host = document.getElementById('apn-host').value.trim();
+  var user = document.getElementById('apn-user').value.trim();
+  var pass = document.getElementById('apn-pass').value.trim();
+  var err  = document.getElementById('apn-err');
+  var out  = document.getElementById('apn-out');
+  if (!host) {
+    err.style.display = 'block';
+    out.textContent = '—'; out.className = 'cmd-output empty'; return;
+  }
+  err.style.display = 'none';
+  out.textContent = '>SCXAPN' + host + ',' + user + ',' + pass + '<';
+  out.className = 'cmd-output';
+}
+
+// ── IP ────────────────────────────────────────────────────────────────────
+function buildIp() {
+  var err = document.getElementById('ip-err');
+  var out = document.getElementById('ip-out');
+  var ip0h = document.getElementById('ip0h').value.trim();
+  var ip0p = document.getElementById('ip0p').value.trim();
+  var portOk = ip0p && parseInt(ip0p) >= 1 && parseInt(ip0p) <= 65535;
+  if (!ip0h || !portOk) {
+    err.style.display = 'block';
+    out.textContent = 'Ingresá IP0 con host y puerto'; out.className = 'cmd-output empty'; return;
+  }
+  err.style.display = 'none';
+  var lines = [];
+  [0, 1].forEach(function(i) {
+    var h = document.getElementById('ip' + i + 'h').value.trim();
+    var p = document.getElementById('ip' + i + 'p').value.trim();
+    if (!h || !p) return;
+    var isDns = isNaN(h.charAt(0));
+    var body = isDns ? 'SIP' + i + '"' + h + '",' + p : 'SIP' + i + h + '/' + p;
+    lines.push('>' + body + '<');
+  });
+  // SIP2 FOTA URL
+  var url2el = document.getElementById('ip2-url');
+  if (url2el) {
+    var url2 = url2el.value.trim();
+    if (url2) lines.push('>SIP2"' + url2 + '"<');
+  }
+  out.textContent = lines.join('\n');
+  out.className = 'cmd-output';
+}
+
+// ── AI ────────────────────────────────────────────────────────────────────
+function nv(val, def) {
+  var n = parseFloat(val);
+  return isNaN(n) ? def : n;
+}
+
+// Returns numeric string or '' for blank/unset alarm fields
+function af(val) {
+  if (val === '' || val === null || val === undefined) return '';
+  var n = parseFloat(val);
+  return isNaN(n) ? '' : String(n);
+}
+
+function buildAiCmd(ch) {
+  var v = aiVals[ch - 1];
+  var chStr = String(ch).padStart(2, '0');
+  if (!v.desc || v.desc.trim().length === 0) return null;
+  if (nv(v.max, 0) <= nv(v.min, 0)) return null;
+  if (!v.unit || v.unit.trim().length === 0) return null;
+  var unitPad = v.unit.trim().substring(0, 3);
+  while (unitPad.length < 3) unitPad += ' ';
+  return '>SAI' + chStr + ',' + v.t +
+    ',' + nv(v.min, 0) + ',' + nv(v.max, 0) +
+    ',' + v.desc + ',' + unitPad +
+    ',' + af(v.hh) + ',' + af(v.h) +
+    ',' + af(v.l)  + ',' + af(v.ll) +
+    ',' + af(v.dif) + ',' + af(v.tt) + '<';
+}
+
+function initAiChips() {
+  var grid = document.getElementById('ai-chips');
+  grid.innerHTML = '';
+  aiDef.forEach(function(d) {
+    var el = document.createElement('div');
+    el.className = 'ai-chip' + (d.ch === selAiCh ? ' active' : '');
+    el.id = 'chip-' + d.ch;
+    el.textContent = 'AI' + String(d.ch).padStart(2,'0');
+    el.setAttribute('title', d.desc);
+    el.onclick = function() { selectAiCh(d.ch); };
+    grid.appendChild(el);
+  });
+}
+
+function selectAiCh(ch) {
+  selAiCh = ch;
+  document.querySelectorAll('.ai-chip').forEach(function(c){ c.classList.remove('active'); });
+  var chip = document.getElementById('chip-' + ch);
+  if(chip) chip.classList.add('active');
+  renderAiForm(ch);
+}
+
+function N(id, val) {
+  return '<input type="text" inputmode="decimal" class="num-field" id="' + id + '" value="' + val + '" autocomplete="off" oninput="sanitizeNum(this);saveAiVal();buildAi()">';
+}
+
+function renderAiForm(ch) {
+  var v = aiVals[ch - 1];
+  var chStr = String(ch).padStart(2, '0');
+  var wrapper = document.getElementById('ai-form-wrapper');
+
+  var html =
+    '<div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:0">' +
+      '<div class="section-label" style="margin-bottom:.625rem">Canal AI' + chStr + ' — ' + v.desc + '</div>' +
+
+      // Tipo
+      '<div class="field-row">' +
+        '<div><div class="field-label">Tipo de señal</div></div>' +
+        '<select id="ai-t" onchange="saveAiVal();buildAi()">' +
+          '<option value="A"' + (v.t==='A'?' selected':'') + '>A — corriente 4–20 mA</option>' +
+          '<option value="V"' + (v.t==='V'?' selected':'') + '>V — tensión 0–10 V</option>' +
+        '</select>' +
+      '</div>' +
+
+      // Unidad de ingeniería
+      '<div class="alarm-label"><span class="alarm-dot" style="background:var(--accent)"></span>Unidad de ingeniería</div>' +
+
+      '<div class="alarm-grid">' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">Mínimo</div><div class="field-hint">con punto decimal</div></div>' +
+          N('ai-min', v.min) +
+        '</div>' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">Máximo</div><div class="field-hint">mayor que mínimo</div></div>' +
+          N('ai-max', v.max) +
+        '</div>' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">Descripción</div><div class="field-hint">máx. 20 caracteres</div></div>' +
+          '<input type="text" id="ai-desc" maxlength="20" value="' + v.desc + '" oninput="saveAiVal();buildAi()">' +
+        '</div>' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">Unidad (UUU)</div><div class="field-hint">exactamente 3 chars</div></div>' +
+          '<input type="text" id="ai-unit" maxlength="4" value="' + v.unit + '" oninput="saveAiVal();buildAi()" style="font-family:var(--mono)">' +
+        '</div>' +
+      '</div>' +
+
+      // Alarmas de nivel
+      '<div class="alarm-label"><span class="alarm-dot" style="background:var(--danger)"></span>Alarmas de nivel <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(vacío = deshabilitada)</span></div>' +
+
+      '<div class="alarm-grid">' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">HH — Alto-Alto</div><div class="field-hint">umbral crítico superior</div></div>' +
+          N('ai-hh', v.hh) +
+        '</div>' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">H — Alto</div><div class="field-hint">umbral alto</div></div>' +
+          N('ai-h', v.h) +
+        '</div>' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">L — Bajo</div><div class="field-hint">umbral bajo</div></div>' +
+          N('ai-l', v.l) +
+        '</div>' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">LL — Bajo-Bajo</div><div class="field-hint">umbral crítico inferior</div></div>' +
+          N('ai-ll', v.ll) +
+        '</div>' +
+      '</div>' +
+
+      // Alarma diferencial
+      '<div class="alarm-label"><span class="alarm-dot" style="background:var(--amber)"></span>Alarma diferencial <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(0 = deshabilitada)</span></div>' +
+
+      '<div class="alarm-grid">' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">DIF — Diferencial</div><div class="field-hint">variación mínima para disparar</div></div>' +
+          N('ai-dif', v.dif) +
+        '</div>' +
+        '<div class="field-row">' +
+          '<div><div class="field-label">TT — Ventana (s)</div><div class="field-hint">segundos de observación</div></div>' +
+          N('ai-tt', v.tt) +
+        '</div>' +
+      '</div>' +
+
+      '<div id="ai-err" class="field-error"></div>' +
+
+      '<div style="display:flex;align-items:center;flex-wrap:wrap">' +
+        '<button class="confirm-btn' + (aiConfirmed[ch-1] ? ' ok' : '') + '" id="confirm-btn" onclick="confirmAiCh(' + ch + ')">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          (aiConfirmed[ch-1] ? ' Canal confirmado' : ' Confirmar canal') +
+        '</button>' +
+        '<button class="reset-btn" onclick="resetAiCh(' + ch + ')">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>' +
+          ' Valores por defecto' +
+        '</button>' +
+      '</div>' +
+
+      '<div class="output-box">' +
+        '<div class="output-header">' +
+          '<span class="output-label">Comando SAI' + chStr + '</span>' +
+          '<button class="copy-btn" id="copy-ai" onclick="copyText(\'ai-out\',\'copy-ai\')">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+            'Copiar' +
+          '</button>' +
+        '</div>' +
+        '<div class="cmd-output" id="ai-out">—</div>' +
+      '</div>' +
+    '</div>';
+
+  wrapper.innerHTML = html;
+  buildAi();
+}
+
+function saveAiVal() {
+  var ch = selAiCh;
+  var v = aiVals[ch - 1];
+  v.t    = document.getElementById('ai-t').value;
+  v.min  = document.getElementById('ai-min').value;
+  v.max  = document.getElementById('ai-max').value;
+  v.desc = document.getElementById('ai-desc').value;
+  v.unit = document.getElementById('ai-unit').value;
+  v.hh   = document.getElementById('ai-hh').value;
+  v.h    = document.getElementById('ai-h').value;
+  v.l    = document.getElementById('ai-l').value;
+  v.ll   = document.getElementById('ai-ll').value;
+  v.dif  = document.getElementById('ai-dif').value;
+  v.tt   = document.getElementById('ai-tt').value;
+}
+
+function buildAi() {
+  var ch    = selAiCh;
+  var chStr = String(ch).padStart(2, '0');
+  var v     = aiVals[ch - 1];
+  var err   = document.getElementById('ai-err');
+  var out   = document.getElementById('ai-out');
+
+  var msgs = [];
+  if (!v.desc || v.desc.trim().length === 0) msgs.push('La descripción no puede estar vacía.');
+  if (v.desc && v.desc.length > 20)          msgs.push('Descripción supera 20 caracteres.');
+  if (nv(v.max,0) <= nv(v.min,0))            msgs.push('Máximo debe ser mayor que mínimo.');
+  if (!v.unit || v.unit.trim().length === 0) msgs.push('La unidad no puede estar vacía.');
+
+  // Alarm hierarchy check — all 4 pairs, whenever both fields of a pair have values
+  var aHH = af(v.hh), aH = af(v.h), aL = af(v.l), aLL = af(v.ll);
+  var nHH = aHH !== '' ? parseFloat(aHH) : null;
+  var nH  = aH  !== '' ? parseFloat(aH)  : null;
+  var nL  = aL  !== '' ? parseFloat(aL)  : null;
+  var nLL = aLL !== '' ? parseFloat(aLL) : null;
+  if (nHH !== null && nH  !== null && nHH <= nH)  msgs.push('HH debe ser mayor que H.');
+  if (nHH !== null && nL  !== null && nHH <= nL)  msgs.push('HH debe ser mayor que L.');
+  if (nHH !== null && nLL !== null && nHH <= nLL) msgs.push('HH debe ser mayor que LL.');
+  if (nH  !== null && nL  !== null && nH  <= nL)  msgs.push('H debe ser mayor que L.');
+  if (nH  !== null && nLL !== null && nH  <= nLL) msgs.push('H debe ser mayor que LL.');
+  if (nL  !== null && nLL !== null && nL  <= nLL) msgs.push('L debe ser mayor que LL.');
+
+  // Differential: DIF requires TT and vice versa
+  var aDIF = af(v.dif), aTT = af(v.tt);
+  if ((aDIF !== '' && aTT === '') || (aDIF === '' && aTT !== ''))
+    msgs.push('DIF y TT deben configurarse juntos.');
+
+  if (msgs.length) {
+    err.textContent = msgs.join(' ');
+    err.style.display = 'block';
+    out.textContent = '—'; out.className = 'cmd-output empty';
+  } else {
+    err.style.display = 'none';
+    var unitPad = v.unit.trim().substring(0, 3);
+    while (unitPad.length < 3) unitPad += ' ';
+    out.textContent =
+      '>SAI' + chStr + ',' + v.t +
+      ',' + nv(v.min,0) + ',' + nv(v.max,0) +
+      ',' + v.desc + ',' + unitPad +
+      ',' + af(v.hh) + ',' + af(v.h) +
+      ',' + af(v.l)  + ',' + af(v.ll) +
+      ',' + af(v.dif) + ',' + af(v.tt) + '<';
+    out.className = 'cmd-output';
+  }
+
+  if (msgs.length) {
+    aiConfirmed[ch - 1] = false;
+    var chip2 = document.getElementById('chip-' + ch);
+    if (chip2) chip2.classList.remove('confirmed');
+    var btn2 = document.getElementById('confirm-btn');
+    if (btn2) { btn2.classList.remove('ok'); btn2.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Confirmar canal'; }
+  }
+  renderAllAi();
+}
+
+function buildAiCmdFromVals(vals, ch) {
+  // Build command from an explicit vals object (used for default preview)
+  var v = vals;
+  var chStr = String(ch).padStart(2, '0');
+  if (!v.desc || v.desc.trim().length === 0) return null;
+  if (nv(v.max, 0) <= nv(v.min, 0)) return null;
+  if (!v.unit || v.unit.trim().length === 0) return null;
+  var unitPad = v.unit.trim().substring(0, 3);
+  while (unitPad.length < 3) unitPad += ' ';
+  return '>SAI' + chStr + ',' + v.t +
+    ',' + nv(v.min, 0) + ',' + nv(v.max, 0) +
+    ',' + v.desc + ',' + unitPad +
+    ',' + af(v.hh) + ',' + af(v.h) +
+    ',' + af(v.l)  + ',' + af(v.ll) +
+    ',' + af(v.dif) + ',' + af(v.tt) + '<';
+}
+
+function renderAllAi() {
+  var container = document.getElementById('all-ai-lines');
+  container.innerHTML = '';
+  for (var i = 0; i < 10; i++) {
+    var ch = i + 1;
+    var chStr = String(ch).padStart(2, '0');
+    var confirmed = aiConfirmed[ch - 1];
+
+    // Use confirmed aiVals if confirmed, otherwise use factory defaults
+    var valsToUse;
+    if (confirmed) {
+      valsToUse = aiVals[ch - 1];
+    } else {
+      var d = aiDef[ch - 1];
+      valsToUse = { t: d.t, min: d.min, max: d.max, desc: d.desc, unit: d.unit.trim(), hh: '', h: '', l: '', ll: '', dif: '', tt: '' };
+    }
+    var cmd = buildAiCmdFromVals(valsToUse, ch);
+
+    var row = document.createElement('div');
+    row.className = 'all-ai-line';
+
+    var label = document.createElement('div');
+    label.className = 'all-ai-ch';
+    label.textContent = 'AI' + chStr;
+    // Small indicator dot: green if confirmed, muted if default
+    label.innerHTML = 'AI' + chStr +
+      '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:' +
+      (confirmed ? 'var(--green)' : 'var(--border-med)') + '"></span>';
+
+    var val = document.createElement('div');
+    if (cmd) {
+      val.className = confirmed ? 'all-ai-cmd' : 'all-ai-cmd';
+      val.style.color = confirmed ? '' : 'var(--text3)';
+      val.textContent = cmd;
+    } else {
+      val.className = 'all-ai-cmd err';
+      val.textContent = '— datos incompletos';
+    }
+    row.appendChild(label);
+    row.appendChild(val);
+    container.appendChild(row);
+  }
+}
+
+
+
+// ── STD / SKA / STMR ──────────────────────────────────────────────────────
+function sanitizeNumPos(el) {
+  // Positive integers only (no minus, no dot)
+  var v = el.value, cleaned = '';
+  for (var i = 0; i < v.length; i++) {
+    if (v[i] >= '0' && v[i] <= '9') cleaned += v[i];
+  }
+  if (el.value !== cleaned) {
+    var pos = Math.max(0, el.selectionStart - (v.length - cleaned.length));
+    el.value = cleaned;
+    try { el.setSelectionRange(pos, pos); } catch(e) {}
+  }
+}
+
+function buildSTD() {
+  var raw = document.getElementById('std-val').value.trim();
+  var err = document.getElementById('std-err');
+  var out = document.getElementById('std-out');
+  if (raw === '') { err.style.display='none'; out.textContent='—'; out.className='cmd-output empty'; return; }
+  var n = parseInt(raw);
+  if (isNaN(n) || n < 30 || n > 3600) {
+    err.textContent = 'Valor fuera de rango. Debe estar entre 30 y 3600 segundos.';
+    err.style.display = 'block';
+    out.textContent = '—'; out.className = 'cmd-output empty'; return;
+  }
+  err.style.display = 'none';
+  out.textContent = '>STD' + n + '<';
+  out.className = 'cmd-output';
+}
+
+function buildSKA() {
+  var raw = document.getElementById('ska-val').value.trim();
+  var err = document.getElementById('ska-err');
+  var out = document.getElementById('ska-out');
+  if (raw === '') { err.style.display='none'; out.textContent='—'; out.className='cmd-output empty'; return; }
+  var n = parseInt(raw);
+  if (isNaN(n) || n < 15 || n > 3600) {
+    err.textContent = 'Valor fuera de rango. Debe estar entre 15 y 3600 segundos.';
+    err.style.display = 'block';
+    out.textContent = '—'; out.className = 'cmd-output empty'; return;
+  }
+  err.style.display = 'none';
+  out.textContent = '>SKA' + n + '<';
+  out.className = 'cmd-output';
+}
+
+function buildTMR() {
+  [1, 2].forEach(function(t) {
+    var raw = document.getElementById('tmr' + t + '-val').value.trim();
+    var wrap = document.getElementById('tmr' + t + '-out-wrap');
+    var out  = document.getElementById('tmr' + t + '-out');
+    if (raw === '') { wrap.style.display = 'none'; return; }
+    var n = parseInt(raw);
+    if (isNaN(n) || n < 0 || n > 9999999) {
+      wrap.style.display = 'none'; return;
+    }
+    out.textContent = '>STMR' + t + ':' + n + '<';
+    out.className = 'cmd-output';
+    wrap.style.display = 'block';
+  });
+}
+
+// ── LINEALIZACIÓN CISTERNA ────────────────────────────────────────────────
+function buildCL() {
+  var ids = ['cl-n1','cl-n2','cl-m1','cl-b1','cl-m2','cl-b2','cl-m3','cl-b3'];
+  var vals = {};
+  ids.forEach(function(id) { vals[id] = document.getElementById(id).value.trim(); });
+
+  var err = document.getElementById('cl-err');
+  var out = document.getElementById('cl-out');
+
+  var msgs = [];
+  var allFilled = ids.every(function(id) { return vals[id] !== ''; });
+
+  if (!allFilled) {
+    err.style.display = 'none';
+    out.textContent = 'Completá todos los campos para generar el comando';
+    out.className = 'cmd-output empty';
+    return;
+  }
+
+  var n1 = parseFloat(vals['cl-n1']);
+  var n2 = parseFloat(vals['cl-n2']);
+
+  if (isNaN(n1)) msgs.push('n1 debe ser un número válido.');
+  if (isNaN(n2)) msgs.push('n2 debe ser un número válido.');
+  if (!isNaN(n1) && !isNaN(n2) && n2 <= n1) msgs.push('n2 debe ser mayor que n1.');
+
+  ['m1','b1','m2','b2','m3','b3'].forEach(function(k) {
+    if (isNaN(parseFloat(vals['cl-' + k]))) msgs.push(k + ' debe ser un número válido.');
+  });
+
+  if (msgs.length) {
+    err.textContent = msgs.join(' ');
+    err.style.display = 'block';
+    out.textContent = '—';
+    out.className = 'cmd-output empty';
+    return;
+  }
+
+  err.style.display = 'none';
+
+  var parts = [n1, n2,
+    parseFloat(vals['cl-m1']), parseFloat(vals['cl-b1']),
+    parseFloat(vals['cl-m2']), parseFloat(vals['cl-b2']),
+    parseFloat(vals['cl-m3']), parseFloat(vals['cl-b3'])
+  ].map(function(v) { return v; });
+
+  out.textContent = '>SCL' + parts.join(',') + '<';
+  out.className = 'cmd-output';
+}
+
+
+
+// ── CONTROL SCRIPT ────────────────────────────────────────────────────────
+function setSCR(n, state) {
+  var out = document.getElementById('scr' + n + '-out');
+  var onBtn  = document.getElementById('scr' + n + '-on-btn');
+  var offBtn = document.getElementById('scr' + n + '-off-btn');
+  if (!out) return;
+
+  out.textContent = '>SSCR' + n + ':' + state + '<';
+  out.className = 'cmd-output';
+
+  // Highlight active button
+  var greenStyle = 'margin-top:0;background:var(--green-bg);border-color:var(--green);color:var(--green);font-weight:600';
+  var dangerStyle = 'margin-top:0;background:var(--danger-bg);border-color:var(--danger);color:var(--danger);font-weight:600';
+  var neutralStyle = 'margin-top:0';
+
+  if (state === 'ON') {
+    if (onBtn)  onBtn.setAttribute('style', greenStyle);
+    if (offBtn) offBtn.setAttribute('style', neutralStyle);
+  } else {
+    if (offBtn) offBtn.setAttribute('style', dangerStyle);
+    if (onBtn)  onBtn.setAttribute('style', 'margin-top:0;background:var(--green-bg);border-color:var(--green);color:var(--green)');
+  }
+}
+
+
+// ── WIFI SAPW ─────────────────────────────────────────────────────────────
+var apwDefaults = [
+  { ssid: 'websat',    pass: '12345678',   ip: '', mask: '', gw: '' },
+  { ssid: 'INVITADOS', pass: '1234567890', ip: '', mask: '', gw: '' },
+  { ssid: '', pass: '', ip: '', mask: '', gw: '' },
+  { ssid: '', pass: '', ip: '', mask: '', gw: '' },
+  { ssid: '', pass: '', ip: '', mask: '', gw: '' }
+];
+var apwStore     = apwDefaults.map(function(d){ return Object.assign({},d); });
+var apwConfirmed = [false, false, false, false, false];
+var apwSelIdx    = 0;
+
+function initAPWChips() {
+  var grid = document.getElementById('apw-chips');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (var i = 0; i < 5; i++) {
+    var el = document.createElement('div');
+    el.className = 'ai-chip' + (i === apwSelIdx ? ' active' : '') + (apwConfirmed[i] ? ' confirmed' : '');
+    el.id = 'apw-chip-' + i;
+    el.textContent = 'AP0' + i;
+    (function(idx){ el.onclick = function(){ selectAPW(idx); }; })(i);
+    grid.appendChild(el);
+  }
+}
+
+function selectAPW(idx) {
+  apwSelIdx = idx;
+  var idxStr = String(idx).padStart(2,'0');
+  document.querySelectorAll('#apw-chips .ai-chip').forEach(function(c){ c.classList.remove('active'); });
+  var chip = document.getElementById('apw-chip-' + idx);
+  if (chip) chip.classList.add('active');
+  var d = apwStore[idx];
+  document.getElementById('apw-ssid').value = d.ssid;
+  document.getElementById('apw-pass').value = d.pass;
+  document.getElementById('apw-ip').value   = d.ip;
+  document.getElementById('apw-mask').value = d.mask;
+  document.getElementById('apw-gw').value   = d.gw;
+  var lbl = document.getElementById('apw-cmd-label');
+  if (lbl) lbl.textContent = 'Comando SAPW' + idxStr;
+  var btn = document.getElementById('apw-confirm-btn');
+  if (btn) {
+    var svgChk = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    if (apwConfirmed[idx]) { btn.classList.add('ok'); btn.innerHTML = svgChk + ' Red confirmada'; }
+    else { btn.classList.remove('ok'); btn.innerHTML = svgChk + ' Confirmar red'; }
+  }
+  buildAPW();
+}
+
+function loadAPW() { selectAPW(apwSelIdx); }
+
+function saveAPW() {
+  var idx = apwSelIdx;
+  apwStore[idx] = {
+    ssid: document.getElementById('apw-ssid').value.trim(),
+    pass: document.getElementById('apw-pass').value.trim(),
+    ip:   document.getElementById('apw-ip').value.trim(),
+    mask: document.getElementById('apw-mask').value.trim(),
+    gw:   document.getElementById('apw-gw').value.trim()
+  };
+  apwConfirmed[idx] = false;
+  var chip = document.getElementById('apw-chip-' + idx);
+  if (chip) { chip.classList.remove('confirmed'); }
+  var btn = document.getElementById('apw-confirm-btn');
+  if (btn) {
+    btn.classList.remove('ok');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Confirmar red';
+  }
+  renderAPWAll();
+}
+
+function confirmAPW() {
+  var idx = apwSelIdx;
+  var d = apwStore[idx];
+  if (!d.ssid) return;
+  var hasStatic = d.ip || d.mask || d.gw;
+  if (hasStatic && (!d.ip || !d.mask || !d.gw)) return;
+  apwConfirmed[idx] = true;
+  var chip = document.getElementById('apw-chip-' + idx);
+  if (chip) chip.classList.add('confirmed');
+  var btn = document.getElementById('apw-confirm-btn');
+  if (btn) {
+    btn.classList.add('ok');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Red confirmada';
+  }
+  renderAPWAll();
+}
+
+function resetAPW() {
+  var idx = apwSelIdx;
+  apwStore[idx] = Object.assign({}, apwDefaults[idx]);
+  apwConfirmed[idx] = false;
+  var chip = document.getElementById('apw-chip-' + idx);
+  if (chip) chip.classList.remove('confirmed');
+  selectAPW(idx);
+  renderAPWAll();
+}
+
+function apwCmd(idx) {
+  var d = apwStore[idx];
+  var idxStr = String(idx).padStart(2,'0');
+  if (!d.ssid) return null;
+  var hasStatic = d.ip || d.mask || d.gw;
+  if (hasStatic && (!d.ip || !d.mask || !d.gw)) return null;
+  return '>SAPW' + idxStr + d.ssid + ',' + d.pass + ',' + d.ip + ',' + d.mask + ',' + d.gw + '<';
+}
+
+function buildAPW() {
+  var idx    = apwSelIdx;
+  var idxStr = String(idx).padStart(2,'0');
+  var ssid = document.getElementById('apw-ssid').value.trim();
+  var pass = document.getElementById('apw-pass').value.trim();
+  var ip   = document.getElementById('apw-ip').value.trim();
+  var mask = document.getElementById('apw-mask').value.trim();
+  var gw   = document.getElementById('apw-gw').value.trim();
+  var err  = document.getElementById('apw-err');
+  var out  = document.getElementById('apw-out');
+  if (!ssid) {
+    err.style.display = 'none';
+    out.textContent = 'Completá SSID y contraseña';
+    out.className = 'cmd-output empty';
+    renderAPWAll(); return;
+  }
+  var hasStatic = ip || mask || gw;
+  if (hasStatic && (!ip || !mask || !gw)) {
+    err.textContent = 'Para IP estática completá IP, Máscara y Gateway.';
+    err.style.display = 'block';
+    out.textContent = '—'; out.className = 'cmd-output empty';
+    renderAPWAll(); return;
+  }
+  err.style.display = 'none';
+  out.textContent = '>SAPW' + idxStr + ssid + ',' + pass + ',' + ip + ',' + mask + ',' + gw + '<';
+  out.className = 'cmd-output';
+  renderAPWAll();
+}
+
+function renderAPWAll() {
+  var container = document.getElementById('apw-all-lines');
+  if (!container) return;
+  container.innerHTML = '';
+  for (var i = 0; i < 5; i++) {
+    var idxStr = String(i).padStart(2,'0');
+    var confirmed = apwConfirmed[i];
+    var valsToUse = confirmed ? apwStore[i] : apwDefaults[i];
+    var cmd = null;
+    if (valsToUse.ssid) {
+      var hasS = valsToUse.ip || valsToUse.mask || valsToUse.gw;
+      if (!hasS || (valsToUse.ip && valsToUse.mask && valsToUse.gw)) {
+        cmd = '>SAPW' + idxStr + valsToUse.ssid + ',' + valsToUse.pass + ',' + valsToUse.ip + ',' + valsToUse.mask + ',' + valsToUse.gw + '<';
+      }
+    }
+    var row = document.createElement('div');
+    row.className = 'all-ai-line';
+    row.style.cursor = 'pointer';
+    (function(ii){ row.onclick = function(){ selectAPW(ii); }; })(i);
+    var label = document.createElement('div');
+    label.className = 'all-ai-ch';
+    label.innerHTML = 'AP' + idxStr +
+      '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;background:' +
+      (confirmed ? 'var(--green)' : 'var(--border-med)') + '"></span>';
+    var val = document.createElement('div');
+    if (cmd) {
+      val.className = 'all-ai-cmd';
+      val.style.color = confirmed ? '' : 'var(--text3)';
+      val.textContent = cmd;
+    } else if (valsToUse.ssid) {
+      val.className = 'all-ai-cmd err';
+      val.textContent = '— IP estática incompleta';
+    } else {
+      val.style.cssText = 'font-size:12px;color:var(--text3);font-family:var(--sans)';
+      val.textContent = '— vacía';
+    }
+    row.appendChild(label);
+    row.appendChild(val);
+    container.appendChild(row);
+  }
+}
+
+function copyAllAPW() {
+  var lines = [];
+  for (var i = 0; i < 5; i++) {
+    var cmd = apwCmd(i);
+    if (cmd) lines.push(cmd);
+  }
+  if (!lines.length) return;
+  navigator.clipboard.writeText(lines.join('\n')).then(function(){
+    var btn = document.getElementById('copy-apw-all');
+    if (!btn) return;
+    var orig = btn.innerHTML;
+    btn.innerHTML = '✓ Copiado'; btn.classList.add('copied');
+    setTimeout(function(){ btn.innerHTML = orig; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+
+// ── GUARDAR / CARGAR CONFIGURACIÓN ────────────────────────────────────────
+function gatherConfig() {
+  return {
+    version: '1.29',
+    apn: {
+      host: document.getElementById('apn-host').value,
+      user: document.getElementById('apn-user').value,
+      pass: document.getElementById('apn-pass').value
+    },
+    ip: {
+      ip0h: document.getElementById('ip0h').value,
+      ip0p: document.getElementById('ip0p').value,
+      ip1h: document.getElementById('ip1h').value,
+      ip1p: document.getElementById('ip1p').value,
+      ip2url: document.getElementById('ip2-url').value
+    },
+    wifi: apwStore,
+    std: document.getElementById('std-val').value,
+    ska: document.getElementById('ska-val').value,
+    tmr1: document.getElementById('tmr1-val') ? document.getElementById('tmr1-val').value : '',
+    tmr2: document.getElementById('tmr2-val') ? document.getElementById('tmr2-val').value : '',
+    scl: {
+      n1: document.getElementById('cl-n1').value,
+      n2: document.getElementById('cl-n2').value,
+      m1: document.getElementById('cl-m1').value, b1: document.getElementById('cl-b1').value,
+      m2: document.getElementById('cl-m2').value, b2: document.getElementById('cl-b2').value,
+      m3: document.getElementById('cl-m3').value, b3: document.getElementById('cl-b3').value
+    },
+    ai: aiVals
+  };
+}
+
+function saveConfig() {
+  var cfg = gatherConfig();
+  var json = JSON.stringify(cfg, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  var now = new Date();
+  var ts = now.getFullYear() + '-' +
+    String(now.getMonth()+1).padStart(2,'0') + '-' +
+    String(now.getDate()).padStart(2,'0') + '_' +
+    String(now.getHours()).padStart(2,'0') +
+    String(now.getMinutes()).padStart(2,'0');
+  a.download = 'PLCWS_config_' + ts + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadConfig(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var cfg = JSON.parse(e.target.result);
+      // APN
+      if (cfg.apn) {
+        document.getElementById('apn-host').value = cfg.apn.host || '';
+        document.getElementById('apn-user').value = cfg.apn.user || '';
+        document.getElementById('apn-pass').value = cfg.apn.pass || '';
+        buildApn();
+      }
+      // IP
+      if (cfg.ip) {
+        document.getElementById('ip0h').value = cfg.ip.ip0h || '';
+        document.getElementById('ip0p').value = cfg.ip.ip0p || '';
+        document.getElementById('ip1h').value = cfg.ip.ip1h || '';
+        document.getElementById('ip1p').value = cfg.ip.ip1p || '';
+        document.getElementById('ip2-url').value = cfg.ip.ip2url || '';
+        buildIp();
+      }
+      // WiFi
+      if (cfg.wifi && Array.isArray(cfg.wifi)) {
+        apwStore = cfg.wifi;
+        loadAPW();
+        renderAPWAll();
+      }
+      // STD/SKA
+      if (cfg.std !== undefined) { document.getElementById('std-val').value = cfg.std; buildSTD(); }
+      if (cfg.ska !== undefined) { document.getElementById('ska-val').value = cfg.ska; buildSKA(); }
+      // Timers
+      if (cfg.tmr1 !== undefined && document.getElementById('tmr1-val')) { document.getElementById('tmr1-val').value = cfg.tmr1; buildTMR(); }
+      if (cfg.tmr2 !== undefined && document.getElementById('tmr2-val')) { document.getElementById('tmr2-val').value = cfg.tmr2; buildTMR(); }
+      // SCL
+      if (cfg.scl) {
+        ['n1','n2','m1','b1','m2','b2','m3','b3'].forEach(function(k) {
+          var el = document.getElementById('cl-' + k);
+          if (el && cfg.scl[k] !== undefined) el.value = cfg.scl[k];
+        });
+        buildCL();
+      }
+      // AI
+      if (cfg.ai && Array.isArray(cfg.ai)) {
+        aiVals = cfg.ai;
+        renderAiForm(selAiCh);
+        renderAllAi();
+      }
+      alert('✓ Configuración cargada correctamente.');
+    } catch(ex) {
+      alert('Error al leer el archivo: ' + ex.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── COLLAPSE ──────────────────────────────────────────────────────────────
+function toggleCollapse(trigger) {
+  var arrow = trigger.querySelector('.collapse-arrow');
+  var body  = trigger.nextElementSibling;
+  arrow.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+initAiChips();
+renderAiForm(1);
+renderAllAi();
+apnPreset('internet.ctimovil.com.ar','','');
+buildCL();
+buildSTD();
+buildSKA();
+buildIp();
+initAPWChips();
+selectAPW(0);
+renderAPWAll();
+</script>
+
+<div id="extension-jfafk"></div></body></html>
